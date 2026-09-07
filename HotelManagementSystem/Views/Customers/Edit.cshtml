@@ -1,0 +1,30 @@
+﻿@model HotelManagementSystem.Models.Customers
+@{
+    ViewData["Title"] = "Edit Customers";
+}
+
+<h1>Edit Customers</h1>
+<div class="container">
+    <form method="post" asp-action="Edit">
+        <input type="hidden" asp-for="Id" />
+        <div class="form-group">
+            <label class="control-label">Name</label>
+            <input asp-for="Name" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label class="control-label">Email</label>
+            <input asp-for="Email" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label class="control-label">Phone</label>
+            <input asp-for="Phone" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label class="control-label">National ID</label>
+            <input asp-for="NationalId" class="form-control" />
+        </div>
+        <div class="form-group">
+            <input type="submit" value="Edit" class="btn btn-warning" />
+        </div>
+    </form>
+</div>

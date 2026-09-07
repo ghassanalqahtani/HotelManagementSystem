@@ -1,0 +1,50 @@
+﻿@model IEnumerable<HotelManagementSystem.Models.Bookings>
+
+<div class="container">
+    <div class="row pt-4">
+        <div class="col-12">
+            <h2>قائمة الحجوزات المربوطة (Bookings)</h2>
+        </div>
+    </div>
+
+    <div class="row mb-3">
+        <div class="col-12">
+            <a asp-action="Create" class="btn btn-primary">Create New Booking</a>
+        </div>
+    </div>
+
+    <table class="table table-bordered table-striped">
+        <thead>
+            <tr>
+                <th>ID الحجز</th>
+                <th>اسم النزيل (العميل)</th>
+                <th>رقم الغرفة</th>
+                <th>عدد الليالي</th>
+                <th>إجمالي السعر</th>
+                <th>العمليات</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (Model != null)
+            {
+                foreach (var b in Model)
+                {
+                    <tr>
+                        <td>@b.Id</td>
+                        <td>@(b.Customer != null ? b.Customer.Name : "غير معروف")</td>
+                        <td>@(b.Room != null ? b.Room.RoomNumber : "غير معروف")</td>
+                        <td>@b.NumberOfNights</td>
+                        <td>@b.TotalPrice</td>
+                        <td>
+                            <div class="btn-group" role="group">
+                                <a asp-action="Edit" asp-route-id="@b.Id" class="btn btn-sm btn-success" style="margin-right:5px;">Edit</a>
+                                <a asp-action="Details" asp-route-id="@b.Id" class="btn btn-sm btn-info" style="margin-right:5px; color:white;">Details</a>
+                                <a asp-action="Delete" asp-route-id="@b.Id" class="btn btn-sm btn-danger">Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

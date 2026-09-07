@@ -1,0 +1,28 @@
+﻿@model HotelManagementSystem.Models.Rooms
+
+<h1>Create Rooms</h1>
+<div class="container">
+    <form method="post" asp-action="Create">
+        <div class="form-group">
+            <label class="control-label">Room Number</label>
+            <input asp-for="RoomNumber" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label class="control-label">Room Type</label>
+            <input asp-for="RoomType" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label class="control-label">Price Per Night</label>
+            <input asp-for="PricePerNight" class="form-control" />
+        </div>
+        <div class="form-group">
+            <label class="control-label">Select Floor</label>
+            <select asp-for="FloorsId" class="form-control" asp-items="@(new SelectList(ViewBag.FloorsList, "Id", "FloorName"))">
+                <option value="">-- Choose Floor --</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <input type="submit" value="Create" class="btn btn-primary" />
+        </div>
+    </form>
+</div>
