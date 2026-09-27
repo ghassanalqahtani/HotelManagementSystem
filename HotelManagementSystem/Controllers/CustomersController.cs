@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HotelManagementSystem.Data;
 using HotelManagementSystem.Models;
+using HotelManagementSystem.Dtos;
 
 namespace HotelManagementSystem.Controllers
 {
@@ -17,7 +18,16 @@ namespace HotelManagementSystem.Controllers
 
         public IActionResult Index()
         {
-            IEnumerable<Customers> customersList = _db.Customers.ToList();
+            var customersList = _db.Customers.Select(c => new CustomerDto
+            {
+                Id = c.Id,
+                Name = c.Name,
+                Email = c.Email,
+                Phone = c.Phone,
+                NationalId = c.NationalId,
+                UID = c.UID
+            }).ToList();
+
             return View(customersList);
         }
 
@@ -27,58 +37,76 @@ namespace HotelManagementSystem.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(Customers customers)
+        public IActionResult Create(CreateCustomerDto dto)
         {
-            if (ModelState.IsValid)
+            var customer = new Customers
             {
-                _db.Customers.Add(customers);
-                _db.SaveChanges();
-                return RedirectToAction("Index");
-            }
-            return View(customers);
+                Name = dto.Name,
+                Email = dto.Email,
+                Phone = dto.Phone,
+                NationalId = dto.NationalId
+            };
+            _db.Customers.Add(customer);
+            _db.SaveChanges();
+            return RedirectToAction("Index");
         }
 
         public IActionResult Edit(int Id)
         {
-            var customers = _db.Customers.Find(Id);
-            if (customers == null)
+            var c = _db.Customers.Find(Id);
+            if (c == null) return NotFound();
+
+            var dto = new UpdateCustomerDto
             {
-                return NotFound();
-            }
-            return View(customers);
+                Id = c.Id,
+                Name = c.Name,
+                Email = c.Email,
+                Phone = c.Phone,
+                NationalId = c.NationalId
+            };
+            return View(dto);
         }
 
         [HttpPost]
-        public IActionResult Edit(Customers customers)
+        public IActionResult Edit(UpdateCustomerDto dto)
         {
-            if (ModelState.IsValid)
-            {
-                _db.Customers.Update(customers);
-                _db.SaveChanges();
-                return RedirectToAction("Index");
-            }
-            return View(customers);
+            var c = _db.Customers.Find(dto.Id);
+            if (c == null) return NotFound();
+
+            c.Name = dto.Name;
+            c.Email = dto.Email;
+            c.Phone = dto.Phone;
+            c.NationalId = dto.NationalId;
+
+            _db.Customers.Update(c);
+            _db.SaveChanges();
+            return RedirectToAction("Index");
         }
 
         public IActionResult Delete(int Id)
         {
-            var customers = _db.Customers.Find(Id);
-            if (customers == null)
+            var c = _db.Customers.Find(Id);
+            if (c == null) return NotFound();
+
+            var dto = new CustomerDto
             {
-                return NotFound();
-            }
-            return View(customers);
+                Id = c.Id,
+                Name = c.Name,
+                Email = c.Email,
+                Phone = c.Phone,
+                NationalId = c.NationalId,
+                UID = c.UID
+            };
+            return View(dto);
         }
 
         [HttpPost]
         public IActionResult DeleteConfirmed(int Id)
         {
-            var customers = _db.Customers.Find(Id);
-            if (customers == null)
-            {
-                return NotFound();
-            }
-            _db.Customers.Remove(customers);
+            var c = _db.Customers.Find(Id);
+            if (c == null) return NotFound();
+
+            _db.Customers.Remove(c);
             _db.SaveChanges();
             return RedirectToAction("Index");
         }

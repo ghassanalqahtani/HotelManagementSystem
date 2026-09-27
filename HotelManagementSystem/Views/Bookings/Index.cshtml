@@ -1,4 +1,4 @@
-﻿@model IEnumerable<HotelManagementSystem.Models.Bookings>
+﻿@model IEnumerable<HotelManagementSystem.Dtos.BookingDto>
 
 <div class="container">
     <div class="row pt-4">
@@ -31,8 +31,8 @@
                 {
                     <tr>
                         <td>@b.Id</td>
-                        <td>@(b.Customer != null ? b.Customer.Name : "غير معروف")</td>
-                        <td>@(b.Room != null ? b.Room.RoomNumber : "غير معروف")</td>
+                        <td>@b.CustomerName</td>
+                        <td>@b.RoomNumber</td>
                         <td>@b.NumberOfNights</td>
                         <td>@b.TotalPrice</td>
                         <td>

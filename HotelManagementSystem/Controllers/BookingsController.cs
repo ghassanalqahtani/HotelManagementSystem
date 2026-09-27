@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HotelManagementSystem.Data;
 using HotelManagementSystem.Models;
+using HotelManagementSystem.Dtos;
 
 namespace HotelManagementSystem.Controllers
 {
@@ -18,26 +19,38 @@ namespace HotelManagementSystem.Controllers
 
         public IActionResult Index()
         {
-            var bookingsList = _db.Bookings
-                .Include(b => b.Customer)
-                .Include(b => b.Room)
-                .ToList();
+            var bookingsList = _db.Bookings.Include(b => b.Customer).Include(b => b.Room).Select(b => new BookingDto
+            {
+                Id = b.Id,
+                CustomersId = b.CustomersId,
+                RoomsId = b.RoomsId,
+                NumberOfNights = b.NumberOfNights,
+                TotalPrice = b.TotalPrice,
+                CustomerName = b.Customer != null ? b.Customer.Name : "غير معروف",
+                RoomNumber = b.Room != null ? b.Room.RoomNumber : "غير معروف",
+                UID = b.UID
+            }).ToList();
 
             return View(bookingsList);
         }
 
         public IActionResult Details(int Id)
         {
-            var booking = _db.Bookings
-                .Include(b => b.Customer)
-                .Include(b => b.Room)
-                .FirstOrDefault(b => b.Id == Id);
+            var b = _db.Bookings.Include(x => x.Customer).Include(x => x.Room).FirstOrDefault(x => x.Id == Id);
+            if (b == null) return NotFound();
 
-            if (booking == null)
+            var dto = new BookingDto
             {
-                return NotFound();
-            }
-            return View(booking);
+                Id = b.Id,
+                CustomersId = b.CustomersId,
+                RoomsId = b.RoomsId,
+                NumberOfNights = b.NumberOfNights,
+                TotalPrice = b.TotalPrice,
+                CustomerName = b.Customer != null ? b.Customer.Name : "غير معروف",
+                RoomNumber = b.Room != null ? b.Room.RoomNumber : "غير معروف",
+                UID = b.UID
+            };
+            return View(dto);
         }
 
         public IActionResult Create()
@@ -46,54 +59,78 @@ namespace HotelManagementSystem.Controllers
         }
 
         [HttpPost]
-        public IActionResult Create(Bookings bookings)
+        public IActionResult Create(CreateBookingDto dto)
         {
-            _db.Bookings.Add(bookings);
+            var booking = new Bookings
+            {
+                CustomersId = dto.CustomersId,
+                RoomsId = dto.RoomsId,
+                NumberOfNights = dto.NumberOfNights,
+                TotalPrice = dto.TotalPrice
+            };
+            _db.Bookings.Add(booking);
             _db.SaveChanges();
             return RedirectToAction("Index");
         }
 
         public IActionResult Edit(int Id)
         {
-            var bookings = _db.Bookings.Find(Id);
-            if (bookings == null)
+            var b = _db.Bookings.Find(Id);
+            if (b == null) return NotFound();
+
+            var dto = new UpdateBookingDto
             {
-                return NotFound();
-            }
-            return View(bookings);
+                Id = b.Id,
+                CustomersId = b.CustomersId,
+                RoomsId = b.RoomsId,
+                NumberOfNights = b.NumberOfNights,
+                TotalPrice = b.TotalPrice
+            };
+            return View(dto);
         }
 
         [HttpPost]
-        public IActionResult Edit(Bookings bookings)
+        public IActionResult Edit(UpdateBookingDto dto)
         {
-            if (ModelState.IsValid)
-            {
-                _db.Bookings.Update(bookings);
-                _db.SaveChanges();
-                return RedirectToAction("Index");
-            }
-            return View(bookings);
+            var b = _db.Bookings.Find(dto.Id);
+            if (b == null) return NotFound();
+
+            b.CustomersId = dto.CustomersId;
+            b.RoomsId = dto.RoomsId;
+            b.NumberOfNights = dto.NumberOfNights;
+            b.TotalPrice = dto.TotalPrice;
+
+            _db.Bookings.Update(b);
+            _db.SaveChanges();
+            return RedirectToAction("Index");
         }
 
         public IActionResult Delete(int Id)
         {
-            var bookings = _db.Bookings.Find(Id);
-            if (bookings == null)
+            var b = _db.Bookings.Include(x => x.Customer).Include(x => x.Room).FirstOrDefault(x => x.Id == Id);
+            if (b == null) return NotFound();
+
+            var dto = new BookingDto
             {
-                return NotFound();
-            }
-            return View(bookings);
+                Id = b.Id,
+                CustomersId = b.CustomersId,
+                RoomsId = b.RoomsId,
+                NumberOfNights = b.NumberOfNights,
+                TotalPrice = b.TotalPrice,
+                CustomerName = b.Customer != null ? b.Customer.Name : "غير معروف",
+                RoomNumber = b.Room != null ? b.Room.RoomNumber : "غير معروف",
+                UID = b.UID
+            };
+            return View(dto);
         }
 
         [HttpPost]
         public IActionResult DeleteConfirmed(int Id)
         {
-            var bookings = _db.Bookings.Find(Id);
-            if (bookings == null)
-            {
-                return NotFound();
-            }
-            _db.Bookings.Remove(bookings);
+            var b = _db.Bookings.Find(Id);
+            if (b == null) return NotFound();
+
+            _db.Bookings.Remove(b);
             _db.SaveChanges();
             return RedirectToAction("Index");
         }

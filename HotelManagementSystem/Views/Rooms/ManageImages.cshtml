@@ -1,0 +1,53 @@
+﻿@model HotelManagementSystem.Models.HotelImage
+@{
+    var images = ViewBag.Images as List<HotelManagementSystem.Models.HotelImage>;
+    ViewData["Title"] = "Room Gallery";
+}
+
+<h1>معرض صور الغرفة رقم: @ViewBag.RoomNumber</h1>
+<div class="container mt-4">
+    <div class="card p-4 mb-4">
+        <h5>رفع صورة جديدة للغرفة:</h5>
+        <hr />
+        <form method="post" asp-action="ManageImages" enctype="multipart/form-data">
+            <input type="hidden" asp-for="FolderId" />
+            <div class="form-group mb-3">
+                <label>اسم أو وصف الصورة الفندقية</label>
+                <input type="text" name="imageName" class="form-control" required />
+            </div>
+            <div class="form-group mb-3">
+                <label>اختر الصورة</label>
+                <input type="file" name="fileRoom" class="form-control" required />
+            </div>
+            <div class="form-group">
+                <input type="submit" value="Upload & Save Image" class="btn btn-success" />
+                <a asp-action="Index" class="btn btn-secondary">Back to Rooms</a>
+            </div>
+        </form>
+    </div>
+
+    <h3>معرض الصور الفعلي للغرفة</h3>
+    <hr />
+    <div class="row">
+        @if (images != null && images.Any())
+        {
+            foreach (var img in images)
+            {
+                <div class="col-md-4 mb-3">
+                    <div class="card">
+                        <img src="@img.ImagePath" class="card-img-top" style="height: 250px; object-fit: cover;" alt="Hotel Room" />
+                        <div class="card-body text-center">
+                            <span class="badge bg-secondary">ID: @img.Id</span>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="col-12">
+                <p class="text-warning">لا توجد صور مرفوعة في معرض هذه الغرفة حتى الآن.</p>
+            </div>
+        }
+    </div>
+</div>

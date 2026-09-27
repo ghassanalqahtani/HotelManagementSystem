@@ -1,4 +1,4 @@
-﻿@model IEnumerable<HotelManagementSystem.Models.Rooms>
+﻿@model IEnumerable<HotelManagementSystem.Dtos.RoomDto>
 
 <div class="container">
     <div class="row pt-4">
@@ -17,27 +17,39 @@
         <thead>
             <tr>
                 <th>ID</th>
+                <th>صورة الغرفة</th>
                 <th>رقم الغرفة</th>
                 <th>نوع الغرفة</th>
                 <th>سعر الليلة</th>
                 <th>الطابق المربوط</th>
                 <th>حالة الغرفة</th>
+                <th>UID</th>
                 <th>العمليات</th>
             </tr>
         </thead>
         <tbody>
             @if (Model != null)
             {
-                foreach (var r in Model)
+                foreach (var item in Model)
                 {
                     <tr>
-                        <td>@r.Id</td>
-                        <td>@r.RoomNumber</td>
-                        <td>@r.RoomType</td>
-                        <td>@r.PricePerNight</td>
-                        <td>@(r.Floor != null ? r.Floor.FloorName : "غير محدد")</td>
+                        <td>@item.Id</td>
                         <td>
-                            @if (r.IsAvailable)
+                            @if (!string.IsNullOrEmpty(item.RoomImage))
+                            {
+                                <img src="@item.RoomImage" style="width: 80px; height: 60px; object-fit: cover; border-radius: 5px;" alt="Room" />
+                            }
+                            else
+                            {
+                                <span class="text-muted">لا توجد صورة</span>
+                            }
+                        </td>
+                        <td>@item.RoomNumber</td>
+                        <td>@item.RoomType</td>
+                        <td>@item.PricePerNight</td>
+                        <td>@item.FloorName</td>
+                        <td>
+                            @if (item.IsAvailable)
                             {
                                 @:متاحة
                             }
@@ -46,10 +58,12 @@
                                 @:محجوزة
                             }
                         </td>
+                        <td><small class="text-secondary">@item.UID</small></td>
                         <td>
                             <div class="btn-group" role="group">
-                                <a asp-action="Edit" asp-route-id="@r.Id" class="btn btn-sm btn-success" style="margin-right:5px;">Edit</a>
-                                <a asp-action="Delete" asp-route-id="@r.Id" class="btn btn-sm btn-danger">Delete</a>
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-sm btn-success" style="margin-right:5px;">Edit</a>
+                                <a asp-action="ManageImages" asp-route-roomId="@item.Id" class="btn btn-sm btn-info" style="margin-right:5px; color:white;">Manage Photos</a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-sm btn-danger">Delete</a>
                             </div>
                         </td>
                     </tr>

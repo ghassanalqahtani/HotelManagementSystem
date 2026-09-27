@@ -1,11 +1,12 @@
-﻿using System.ComponentModel.DataAnnotations.Schema;
+﻿using System;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace HotelManagementSystem.Models
 {
     public class Bookings
     {
         public int Id { get; set; }
-
+        public string UID { get; set; } = Guid.NewGuid().ToString();
         public int CustomersId { get; set; }
         [ForeignKey("CustomersId")]
         public virtual Customers? Customer { get; set; }
