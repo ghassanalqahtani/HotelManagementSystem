@@ -1,33 +1,21 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Linq;
-using HotelManagementSystem.Data;
-using HotelManagementSystem.Models;
-using HotelManagementSystem.Dtos;
+using HotelManagementSystem.Application.Dtos;
+using HotelManagementSystem.Application .Services;
 
 namespace HotelManagementSystem.Controllers
 {
     public class CustomersController : Controller
     {
-        private readonly AppDbContext _db;
+        private readonly ICustomerService _customerService;
 
-        public CustomersController(AppDbContext db)
+        public CustomersController(ICustomerService customerService)
         {
-            _db = db;
+            _customerService = customerService;
         }
 
         public IActionResult Index()
         {
-            var customersList = _db.Customers.Select(c => new CustomerDto
-            {
-                Id = c.Id,
-                Name = c.Name,
-                Email = c.Email,
-                Phone = c.Phone,
-                NationalId = c.NationalId,
-                UID = c.UID
-            }).ToList();
-
+            var customersList = _customerService.GetAllCustomers();
             return View(customersList);
         }
 
@@ -39,75 +27,43 @@ namespace HotelManagementSystem.Controllers
         [HttpPost]
         public IActionResult Create(CreateCustomerDto dto)
         {
-            var customer = new Customers
+            if (ModelState.IsValid)
             {
-                Name = dto.Name,
-                Email = dto.Email,
-                Phone = dto.Phone,
-                NationalId = dto.NationalId
-            };
-            _db.Customers.Add(customer);
-            _db.SaveChanges();
-            return RedirectToAction("Index");
+                _customerService.CreateCustomer(dto);
+                return RedirectToAction("Index");
+            }
+            return View(dto);
         }
 
         public IActionResult Edit(int Id)
         {
-            var c = _db.Customers.Find(Id);
-            if (c == null) return NotFound();
-
-            var dto = new UpdateCustomerDto
-            {
-                Id = c.Id,
-                Name = c.Name,
-                Email = c.Email,
-                Phone = c.Phone,
-                NationalId = c.NationalId
-            };
+            var dto = _customerService.GetCustomerById(Id);
+            if (dto == null) return NotFound();
             return View(dto);
         }
 
         [HttpPost]
         public IActionResult Edit(UpdateCustomerDto dto)
         {
-            var c = _db.Customers.Find(dto.Id);
-            if (c == null) return NotFound();
-
-            c.Name = dto.Name;
-            c.Email = dto.Email;
-            c.Phone = dto.Phone;
-            c.NationalId = dto.NationalId;
-
-            _db.Customers.Update(c);
-            _db.SaveChanges();
-            return RedirectToAction("Index");
+            if (ModelState.IsValid)
+            {
+                _customerService.UpdateCustomer(dto);
+                return RedirectToAction("Index");
+            }
+            return View(dto);
         }
 
         public IActionResult Delete(int Id)
         {
-            var c = _db.Customers.Find(Id);
-            if (c == null) return NotFound();
-
-            var dto = new CustomerDto
-            {
-                Id = c.Id,
-                Name = c.Name,
-                Email = c.Email,
-                Phone = c.Phone,
-                NationalId = c.NationalId,
-                UID = c.UID
-            };
+            var dto = _customerService.GetCustomerDetailsById(Id);
+            if (dto == null) return NotFound();
             return View(dto);
         }
 
         [HttpPost]
         public IActionResult DeleteConfirmed(int Id)
         {
-            var c = _db.Customers.Find(Id);
-            if (c == null) return NotFound();
-
-            _db.Customers.Remove(c);
-            _db.SaveChanges();
+            _customerService.DeleteCustomer(Id);
             return RedirectToAction("Index");
         }
     }

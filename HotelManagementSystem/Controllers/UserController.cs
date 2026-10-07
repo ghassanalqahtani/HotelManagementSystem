@@ -1,49 +1,52 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Http;
-using System.IO;
-using System.Collections.Generic;
-using System.Linq;
-using System;
-using HotelManagementSystem.Data;
-using HotelManagementSystem.Models;
-using HotelManagementSystem.Dtos;
+using HotelManagementSystem.Application.Dtos;
+using HotelManagementSystem.Application.Services;
+using HotelManagementSystem.Domain.Models;
+
 
 namespace HotelManagementSystem.Controllers
 {
     public class UserController : Controller
     {
-        private readonly AppDbContext _db;
+        private readonly IUserService _userService;
 
-        public UserController(AppDbContext db)
+        public UserController(IUserService userService)
         {
-            _db = db;
+            _userService = userService;
         }
 
         public IActionResult Index()
         {
-            var usersList = _db.Users.Select(u => new UserDto
-            {
-                Id = u.Id,
-                Username = u.Username,
-                Email = u.Email,
-                Name = u.Name
-            }).ToList();
-
+            var usersList = _userService.GetAllUsers();
             return View(usersList);
         }
 
         [HttpPost]
         public IActionResult Create(CreateUserDto dto)
         {
-            var user = new User
+            if (ModelState.IsValid)
             {
-                Username = dto.Username,
-                Email = dto.Email,
-                Name = dto.Name
-            };
-            _db.Users.Add(user);
-            _db.SaveChanges();
+                _userService.CreateUser(dto);
+            }
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public IActionResult Edit(UpdateUserDto dto)
+        {
+            if (ModelState.IsValid)
+            {
+                
+                _userService.UpdateUser(dto);
+            }
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        public IActionResult Delete(int id)
+        {
+           
+            _userService.DeleteUser(id);
             return RedirectToAction("Index");
         }
 
@@ -64,10 +67,10 @@ namespace HotelManagementSystem.Controllers
 
         public IActionResult ManageFiles(int userId)
         {
-            var user = _db.Users.FirstOrDefault(e => e.Id == userId);
+            var user = _userService.GetUserEntityById(userId);
             if (user == null) return NotFound();
 
-            var files = _db.UserFiles.Where(e => e.UserID == userId).ToList();
+            var files = _userService.GetUserFiles(userId);
             ViewBag.UserName = user.Username;
             ViewBag.Files = files;
 
@@ -81,8 +84,7 @@ namespace HotelManagementSystem.Controllers
             if (userFile != null && fileUser != null)
             {
                 userFile.FileURL = UploadFiles(fileUser, userFile.Name ?? "UserFile");
-                _db.UserFiles.Add(userFile);
-                _db.SaveChanges();
+                _userService.AddUserFile(userFile);
             }
 
             return RedirectToAction(nameof(ManageFiles), new { userId = userFile.UserID });

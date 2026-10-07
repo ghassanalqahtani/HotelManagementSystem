@@ -1,17 +1,16 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Linq;
-using HotelManagementSystem.Data;
-using HotelManagementSystem.Dtos;
+using HotelManagementSystem.Application.Dtos;
+using HotelManagementSystem.Application.Services;
 
 namespace HotelManagementSystem.Controllers
 {
     public class AccountsController : Controller
     {
-        private readonly AppDbContext _db;
+        private readonly IAccountsService _accountsService;
 
-        public AccountsController(AppDbContext db)
+        public AccountsController(IAccountsService accountsService)
         {
-            _db = db;
+            _accountsService = accountsService;
         }
 
         public IActionResult Login()
@@ -28,14 +27,11 @@ namespace HotelManagementSystem.Controllers
                 Password = password
             };
 
-            if (!string.IsNullOrEmpty(dto.Username) && !string.IsNullOrEmpty(dto.Password))
-            {
-                var user = _db.Users.FirstOrDefault(u => u.Username == dto.Username);
+            var isLogged = _accountsService.Login(dto);
 
-                if (user != null && BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
-                {
-                    return RedirectToAction("Index", "Home");
-                }
+            if (isLogged)
+            {
+                return RedirectToAction("Index", "Home");
             }
 
             ModelState.AddModelError("", "Invalid username or password");

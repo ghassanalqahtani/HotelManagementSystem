@@ -1,3 +1,7 @@
 <Solution>
+  <Project Path="HotelManagementSystem.API/HotelManagementSystem.API.csproj" Id="cfaa7809-864d-40b8-9705-8898febcade9" />
+  <Project Path="HotelManagementSystem.Application/HotelManagementSystem.Application.csproj" Id="7b294152-9c72-4d97-a73a-a51b23b6907b" />
+  <Project Path="HotelManagementSystem.Domain/HotelManagementSystem.Domain.csproj" Id="f8ace402-6705-4461-b7e9-677365c9fa1f" />
+  <Project Path="HotelManagementSystem.Infrastructure/HotelManagementSystem.Infrastructure.csproj" Id="9cabac83-d16f-4b6f-ae1c-792ca6058bdd" />
   <Project Path="HotelManagementSystem/HotelManagementSystem.csproj" />
 </Solution>

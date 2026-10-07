@@ -1,137 +1,90 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using System.Collections.Generic;
-using System.Linq;
-using HotelManagementSystem.Data;
-using HotelManagementSystem.Models;
-using HotelManagementSystem.Dtos;
+using Microsoft.AspNetCore.Mvc.Rendering;
+using HotelManagementSystem.Application.Dtos;
+using HotelManagementSystem.Application.Services;
 
 namespace HotelManagementSystem.Controllers
 {
     public class BookingsController : Controller
     {
-        private readonly AppDbContext _db;
+        private readonly IBookingService _bookingService;
+        private readonly ICustomerService _customerService;
+        private readonly IRoomService _roomService;
 
-        public BookingsController(AppDbContext db)
+        public BookingsController(IBookingService bookingService, ICustomerService customerService, IRoomService roomService)
         {
-            _db = db;
+            _bookingService = bookingService;
+            _customerService = customerService;
+            _roomService = roomService;
         }
 
         public IActionResult Index()
         {
-            var bookingsList = _db.Bookings.Include(b => b.Customer).Include(b => b.Room).Select(b => new BookingDto
-            {
-                Id = b.Id,
-                CustomersId = b.CustomersId,
-                RoomsId = b.RoomsId,
-                NumberOfNights = b.NumberOfNights,
-                TotalPrice = b.TotalPrice,
-                CustomerName = b.Customer != null ? b.Customer.Name : "غير معروف",
-                RoomNumber = b.Room != null ? b.Room.RoomNumber : "غير معروف",
-                UID = b.UID
-            }).ToList();
-
+            var bookingsList = _bookingService.GetAllBookings();
             return View(bookingsList);
         }
 
         public IActionResult Details(int Id)
         {
-            var b = _db.Bookings.Include(x => x.Customer).Include(x => x.Room).FirstOrDefault(x => x.Id == Id);
-            if (b == null) return NotFound();
-
-            var dto = new BookingDto
-            {
-                Id = b.Id,
-                CustomersId = b.CustomersId,
-                RoomsId = b.RoomsId,
-                NumberOfNights = b.NumberOfNights,
-                TotalPrice = b.TotalPrice,
-                CustomerName = b.Customer != null ? b.Customer.Name : "غير معروف",
-                RoomNumber = b.Room != null ? b.Room.RoomNumber : "غير معروف",
-                UID = b.UID
-            };
+            var dto = _bookingService.GetBookingById(Id);
+            if (dto == null) return NotFound();
             return View(dto);
         }
 
         public IActionResult Create()
         {
+            ViewBag.CustomersList = new SelectList(_customerService.GetAllCustomers(), "Id", "Name");
+            ViewBag.RoomsList = new SelectList(_roomService.GetAllRooms().Where(r => r.IsAvailable), "Id", "RoomNumber");
             return View();
         }
 
         [HttpPost]
         public IActionResult Create(CreateBookingDto dto)
         {
-            var booking = new Bookings
+            if (ModelState.IsValid)
             {
-                CustomersId = dto.CustomersId,
-                RoomsId = dto.RoomsId,
-                NumberOfNights = dto.NumberOfNights,
-                TotalPrice = dto.TotalPrice
-            };
-            _db.Bookings.Add(booking);
-            _db.SaveChanges();
-            return RedirectToAction("Index");
+                _bookingService.CreateBooking(dto);
+                return RedirectToAction("Index");
+            }
+            ViewBag.CustomersList = new SelectList(_customerService.GetAllCustomers(), "Id", "Name");
+            ViewBag.RoomsList = new SelectList(_roomService.GetAllRooms().Where(r => r.IsAvailable), "Id", "RoomNumber");
+            return View(dto);
         }
 
         public IActionResult Edit(int Id)
         {
-            var b = _db.Bookings.Find(Id);
-            if (b == null) return NotFound();
+            var dto = _bookingService.GetBookingForEditById(Id);
+            if (dto == null) return NotFound();
 
-            var dto = new UpdateBookingDto
-            {
-                Id = b.Id,
-                CustomersId = b.CustomersId,
-                RoomsId = b.RoomsId,
-                NumberOfNights = b.NumberOfNights,
-                TotalPrice = b.TotalPrice
-            };
+            ViewBag.CustomersList = new SelectList(_customerService.GetAllCustomers(), "Id", "Name");
+            ViewBag.RoomsList = new SelectList(_roomService.GetAllRooms(), "Id", "RoomNumber");
             return View(dto);
         }
 
         [HttpPost]
         public IActionResult Edit(UpdateBookingDto dto)
         {
-            var b = _db.Bookings.Find(dto.Id);
-            if (b == null) return NotFound();
-
-            b.CustomersId = dto.CustomersId;
-            b.RoomsId = dto.RoomsId;
-            b.NumberOfNights = dto.NumberOfNights;
-            b.TotalPrice = dto.TotalPrice;
-
-            _db.Bookings.Update(b);
-            _db.SaveChanges();
-            return RedirectToAction("Index");
+            if (ModelState.IsValid)
+            {
+                _bookingService.UpdateBooking(dto);
+                return RedirectToAction("Index");
+            }
+            ViewBag.CustomersList = new SelectList(_customerService.GetAllCustomers(), "Id", "Name");
+            ViewBag.RoomsList = new SelectList(_roomService.GetAllRooms(), "Id", "RoomNumber");
+            return View(dto);
         }
 
         public IActionResult Delete(int Id)
         {
-            var b = _db.Bookings.Include(x => x.Customer).Include(x => x.Room).FirstOrDefault(x => x.Id == Id);
-            if (b == null) return NotFound();
-
-            var dto = new BookingDto
-            {
-                Id = b.Id,
-                CustomersId = b.CustomersId,
-                RoomsId = b.RoomsId,
-                NumberOfNights = b.NumberOfNights,
-                TotalPrice = b.TotalPrice,
-                CustomerName = b.Customer != null ? b.Customer.Name : "غير معروف",
-                RoomNumber = b.Room != null ? b.Room.RoomNumber : "غير معروف",
-                UID = b.UID
-            };
+            var dto = _bookingService.GetBookingById(Id);
+            if (dto == null) return NotFound();
             return View(dto);
         }
 
         [HttpPost]
         public IActionResult DeleteConfirmed(int Id)
         {
-            var b = _db.Bookings.Find(Id);
-            if (b == null) return NotFound();
-
-            _db.Bookings.Remove(b);
-            _db.SaveChanges();
+            _bookingService.DeleteBooking(Id);
             return RedirectToAction("Index");
         }
     }

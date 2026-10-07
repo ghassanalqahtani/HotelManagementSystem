@@ -1,31 +1,21 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using System.Collections.Generic;
-using System.Linq;
-using HotelManagementSystem.Data;
-using HotelManagementSystem.Models;
-using HotelManagementSystem.Dtos;
+using HotelManagementSystem.Application.Dtos;
+using HotelManagementSystem.Application.Services;
 
 namespace HotelManagementSystem.Controllers
 {
     public class FloorsController : Controller
     {
-        private readonly AppDbContext _db;
+        private readonly IFloorService _floorService;
 
-        public FloorsController(AppDbContext db)
+        public FloorsController(IFloorService floorService)
         {
-            _db = db;
+            _floorService = floorService;
         }
 
         public IActionResult Index()
         {
-            var floorsList = _db.Floors.Select(f => new FloorDto
-            {
-                Id = f.Id,
-                FloorName = f.FloorName,
-                FloorNumber = f.FloorNumber,
-                UID = f.UID
-            }).ToList();
-
+            var floorsList = _floorService.GetAllFloors();
             return View(floorsList);
         }
 
@@ -37,67 +27,43 @@ namespace HotelManagementSystem.Controllers
         [HttpPost]
         public IActionResult Create(CreateFloorDto dto)
         {
-            var floor = new Floors
+            if (ModelState.IsValid)
             {
-                FloorName = dto.FloorName,
-                FloorNumber = dto.FloorNumber
-            };
-            _db.Floors.Add(floor);
-            _db.SaveChanges();
-            return RedirectToAction("Index");
+                _floorService.CreateFloor(dto);
+                return RedirectToAction("Index");
+            }
+            return View(dto);
         }
 
         public IActionResult Edit(int Id)
         {
-            var f = _db.Floors.Find(Id);
-            if (f == null) return NotFound();
-
-            var dto = new UpdateFloorDto
-            {
-                Id = f.Id,
-                FloorName = f.FloorName,
-                FloorNumber = f.FloorNumber
-            };
+            var dto = _floorService.GetFloorById(Id);
+            if (dto == null) return NotFound();
             return View(dto);
         }
 
         [HttpPost]
         public IActionResult Edit(UpdateFloorDto dto)
         {
-            var f = _db.Floors.Find(dto.Id);
-            if (f == null) return NotFound();
-
-            f.FloorName = dto.FloorName;
-            f.FloorNumber = dto.FloorNumber;
-
-            _db.Floors.Update(f);
-            _db.SaveChanges();
-            return RedirectToAction("Index");
+            if (ModelState.IsValid)
+            {
+                _floorService.UpdateFloor(dto);
+                return RedirectToAction("Index");
+            }
+            return View(dto);
         }
 
         public IActionResult Delete(int Id)
         {
-            var f = _db.Floors.Find(Id);
-            if (f == null) return NotFound();
-
-            var dto = new FloorDto
-            {
-                Id = f.Id,
-                FloorName = f.FloorName,
-                FloorNumber = f.FloorNumber,
-                UID = f.UID
-            };
+            var dto = _floorService.GetFloorDetailsById(Id);
+            if (dto == null) return NotFound();
             return View(dto);
         }
 
         [HttpPost]
         public IActionResult DeleteConfirmed(int Id)
         {
-            var f = _db.Floors.Find(Id);
-            if (f == null) return NotFound();
-
-            _db.Floors.Remove(f);
-            _db.SaveChanges();
+            _floorService.DeleteFloor(Id);
             return RedirectToAction("Index");
         }
     }

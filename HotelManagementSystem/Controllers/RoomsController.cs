@@ -1,40 +1,26 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.AspNetCore.Http;
-using System.IO;
-using System.Collections.Generic;
-using System.Linq;
-using System;
-using HotelManagementSystem.Data;
 using HotelManagementSystem.Models;
-using HotelManagementSystem.Dtos;
+using HotelManagementSystem.Application.Dtos;
+using HotelManagementSystem.Application.Services;
+using HotelManagementSystem.Infrastructure.Data;
+using HotelManagementSystem.Domain.Models;
 
 namespace HotelManagementSystem.Controllers
 {
     public class RoomsController : Controller
     {
-        private readonly AppDbContext _db;
+        private readonly IRoomService _roomService;
+        private readonly AppDbContext _db; 
 
-        public RoomsController(AppDbContext db)
+        public RoomsController(IRoomService roomService, AppDbContext db)
         {
+            _roomService = roomService;
             _db = db;
         }
 
         public IActionResult Index()
         {
-            var roomsList = _db.Rooms.Include(r => r.Floor).Select(r => new RoomDto
-            {
-                Id = r.Id,
-                RoomNumber = r.RoomNumber,
-                RoomType = r.RoomType,
-                PricePerNight = r.PricePerNight,
-                IsAvailable = r.IsAvailable,
-                FloorsId = r.FloorsId,
-                FloorName = r.Floor != null ? r.Floor.FloorName : "غير محدد",
-                UID = r.UID,
-                RoomImage = r.RoomImage 
-            }).ToList();
-
+            var roomsList = _roomService.GetAllRooms();
             return View(roomsList);
         }
 
@@ -47,17 +33,13 @@ namespace HotelManagementSystem.Controllers
         [HttpPost]
         public IActionResult Create(CreateRoomDto dto)
         {
-            var room = new Rooms
+            if (ModelState.IsValid)
             {
-                RoomNumber = dto.RoomNumber,
-                RoomType = dto.RoomType,
-                PricePerNight = dto.PricePerNight,
-                FloorsId = dto.FloorsId,
-                IsAvailable = true
-            };
-            _db.Rooms.Add(room);
-            _db.SaveChanges();
-            return RedirectToAction("Index");
+                _roomService.CreateRoom(dto);
+                return RedirectToAction("Index");
+            }
+            ViewBag.FloorsList = _db.Floors.ToList();
+            return View(dto);
         }
 
         private string UploadRoomImages(IFormFile file, string name)
@@ -77,10 +59,10 @@ namespace HotelManagementSystem.Controllers
 
         public IActionResult ManageImages(int roomId)
         {
-            var room = _db.Rooms.FirstOrDefault(e => e.Id == roomId);
+            var room = _roomService.GetRoomEntityById(roomId);
             if (room == null) return NotFound();
 
-            var images = _db.HotelImages.Where(e => e.FolderId == roomId).ToList();
+            var images = _roomService.GetRoomImages(roomId);
             ViewBag.RoomNumber = room.RoomNumber;
             ViewBag.Images = images;
 
@@ -94,8 +76,7 @@ namespace HotelManagementSystem.Controllers
             if (hotelImage != null && fileRoom != null)
             {
                 hotelImage.ImagePath = UploadRoomImages(fileRoom, imageName);
-                _db.HotelImages.Add(hotelImage);
-                _db.SaveChanges();
+                _roomService.AddRoomImage(hotelImage);
             }
 
             return RedirectToAction(nameof(ManageImages), new { roomId = hotelImage.FolderId });
@@ -103,17 +84,9 @@ namespace HotelManagementSystem.Controllers
 
         public IActionResult Edit(int Id)
         {
-            var r = _db.Rooms.Find(Id);
-            if (r == null) return NotFound();
+            var dto = _roomService.GetRoomById(Id);
+            if (dto == null) return NotFound();
 
-            var dto = new UpdateRoomDto
-            {
-                Id = r.Id,
-                RoomNumber = r.RoomNumber,
-                RoomType = r.RoomType,
-                PricePerNight = r.PricePerNight,
-                FloorsId = r.FloorsId
-            };
             ViewBag.FloorsList = _db.Floors.ToList();
             return View(dto);
         }
@@ -121,44 +94,26 @@ namespace HotelManagementSystem.Controllers
         [HttpPost]
         public IActionResult Edit(UpdateRoomDto dto)
         {
-            var r = _db.Rooms.Find(dto.Id);
-            if (r == null) return NotFound();
-
-            r.RoomNumber = dto.RoomNumber;
-            r.RoomType = dto.RoomType;
-            r.PricePerNight = dto.PricePerNight;
-            r.FloorsId = dto.FloorsId;
-
-            _db.Rooms.Update(r);
-            _db.SaveChanges();
-            return RedirectToAction("Index");
+            if (ModelState.IsValid)
+            {
+                _roomService.UpdateRoom(dto);
+                return RedirectToAction("Index");
+            }
+            ViewBag.FloorsList = _db.Floors.ToList();
+            return View(dto);
         }
 
         public IActionResult Delete(int Id)
         {
-            var r = _db.Rooms.Include(x => x.Floor).FirstOrDefault(x => x.Id == Id);
-            if (r == null) return NotFound();
-
-            var dto = new RoomDto
-            {
-                Id = r.Id,
-                RoomNumber = r.RoomNumber,
-                RoomType = r.RoomType,
-                PricePerNight = r.PricePerNight,
-                FloorName = r.Floor != null ? r.Floor.FloorName : "غير محدد",
-                UID = r.UID
-            };
+            var dto = _roomService.GetRoomDetailsById(Id);
+            if (dto == null) return NotFound();
             return View(dto);
         }
 
         [HttpPost]
         public IActionResult DeleteConfirmed(int Id)
         {
-            var r = _db.Rooms.Find(Id);
-            if (r == null) return NotFound();
-
-            _db.Rooms.Remove(r);
-            _db.SaveChanges();
+            _roomService.DeleteRoom(Id);
             return RedirectToAction("Index");
         }
     }
